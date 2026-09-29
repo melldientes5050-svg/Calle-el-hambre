@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5722"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#brandGrad)"/>
+  <g filter="url(#shadow)" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Storefront and Restaurant Menu Plate Motif -->
+    <path d="M96 170 L256 90 L416 170 L416 380 Q416 410 386 410 L126 410 Q96 410 96 380 Z" fill="rgba(255, 255, 255, 0.12)"/>
+    <path d="M160 230 L352 230" />
+    <path d="M160 290 L290 290" />
+    <path d="M160 350 L320 350" />
+    <circle cx="360" cy="330" r="32" fill="#FFFFFF" stroke="#EA580C" stroke-width="8"/>
+    <!-- Fork & knife small icon inside circle -->
+    <path d="M352 320 L352 342" stroke="#EA580C" stroke-width="4"/>
+    <path d="M368 316 L368 344" stroke="#EA580C" stroke-width="4"/>
+  </g>
+</svg>

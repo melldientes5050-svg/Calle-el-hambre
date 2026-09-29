@@ -1,0 +1,6 @@
+{
+  "name": "CartaLocales PWA",
+  "description": "App PWA nativa mobile-first multitenant para explorar cartas de locales, hacer pedidos con carrito y notificaciones push incluso sin conexión.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
