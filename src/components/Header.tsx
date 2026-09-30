@@ -46,9 +46,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-extrabold text-sm tracking-tight text-white group-hover:text-orange-400 transition">
                   CartaLocales
                 </span>
-                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                  PWA
-                </span>
               </div>
             </div>
           </button>
@@ -137,3 +134,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
