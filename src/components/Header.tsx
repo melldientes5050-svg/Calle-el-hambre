@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, MapPin, ChevronDown, Store, Smartphone, Monitor, Database, User as UserIcon } from 'lucide-react';
+import { Bell, MapPin, ChevronDown, Store, Smartphone, Monitor, User as UserIcon } from 'lucide-react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,6 @@ import { PWAInstallBanner } from './PWAInstallBanner';
 interface HeaderProps {
   onOpenNotifications: () => void;
   onOpenLocationPicker: () => void;
-  onOpenSupabaseStatus: () => void;
   onOpenProfile: () => void;
   isDeviceFrame: boolean;
   onToggleDeviceFrame: () => void;
@@ -18,7 +17,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenLocationPicker,
-  onOpenSupabaseStatus,
   onOpenProfile,
   isDeviceFrame,
   onToggleDeviceFrame,
@@ -134,4 +132,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
