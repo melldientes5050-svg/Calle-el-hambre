@@ -55,15 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action icons & install */}
           <div className="flex items-center gap-1.5">
-            {/* Supabase status chip */}
-            <button
-              onClick={onOpenSupabaseStatus}
-              className="flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-950/60 border border-emerald-700/60 text-emerald-400 text-[10px] font-bold hover:bg-emerald-900/60 active:scale-95 transition"
-              title="Estado de conexión Supabase"
-            >
-              <Database className="w-3 h-3" />
-              <span className="hidden min-[380px]:inline">Supabase</span>
-            </button>
+
 
             {/* User Profile / Auth Button */}
             <button
