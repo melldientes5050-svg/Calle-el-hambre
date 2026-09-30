@@ -4,14 +4,18 @@ import path from 'path';
 import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
+    // Si tu repositorio se llama "mi-proyecto", debes descomentar la siguiente línea
+    // y cambiar "/mi-proyecto/" por el nombre real de tu repositorio en GitHub:
+    // base: command === 'build' ? '/NOMBRE_DEL_REPOSITORIO/' : '/',
+
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
+        includeAssets: ['apple-touch-icon.png', 'pwa-192x192.png'],
         manifest: {
           id: '/',
           name: 'CartaLocales PWA',
