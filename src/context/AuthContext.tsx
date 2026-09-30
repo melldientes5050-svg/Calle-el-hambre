@@ -120,41 +120,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [role, assignedLocalId]);
 
-  // Check active Supabase session on mount
+  // Check active session on mount using localStorage
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        syncUserRole(currentUser);
-      } else {
-        setRole('general');
-        setAssignedLocalId(null);
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        syncUserRole(currentUser);
-      } else {
-        setRole('general');
-        setAssignedLocalId(null);
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    const savedUser = localStorage.getItem('cartalocales_mock_user');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser) as User;
+      setUser(parsedUser);
+      syncUserRole(parsedUser);
+    } else {
+      setRole('general');
+      setAssignedLocalId(null);
+    }
+    setLoading(false);
   }, []);
 
   const syncUserRole = (u: User) => {
@@ -192,33 +169,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanPhone = phone.trim();
       const fullName = `${cleanFirstName} ${cleanLastName}`.trim();
 
-      const { data, error } = await supabase.auth.signUp({
+      const mockUser = {
+        id: 'local-user-' + Date.now(),
         email: email.trim(),
-        password,
-        options: {
-          data: {
-            first_name: cleanFirstName,
-            last_name: cleanLastName,
-            full_name: fullName,
-            phone: cleanPhone,
-            role: 'general', // TODOS NACEN CON ROL GENERAL
-          },
-        },
-      });
+        user_metadata: {
+          first_name: cleanFirstName,
+          last_name: cleanLastName,
+          full_name: fullName,
+          phone: cleanPhone,
+        }
+      } as unknown as User;
 
-      if (error) {
-        return { error: error.message };
-      }
-
-      if (data.user) {
-        setUser(data.user);
+      localStorage.setItem('cartalocales_mock_user', JSON.stringify(mockUser));
+      setUser(mockUser);
 
         // TODOS los usuarios registrados nacen con rol general
         const userRole: UserRole = 'general';
 
         const newProfile: AppUserProfile = {
-          id: data.user.id,
-          email: data.user.email || email.trim(),
+          id: mockUser.id,
+          email: mockUser.email || email.trim(),
           firstName: cleanFirstName,
           lastName: cleanLastName,
           fullName,
@@ -239,19 +209,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const existingProfile = allUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+      if (!existingProfile && email.trim().toLowerCase() !== 'melldientes5050@gmail.com') {
+        return { error: 'Usuario no encontrado. Regístrate primero.' };
+      }
+
+      const mockUser = {
+        id: existingProfile?.id || 'admin-master',
         email: email.trim(),
-        password,
-      });
+        user_metadata: {
+          full_name: existingProfile?.fullName || 'Admin Maestro',
+          phone: existingProfile?.phone || ''
+        }
+      } as unknown as User;
 
-      if (error) {
-        return { error: error.message };
-      }
-
-      if (data.user) {
-        setUser(data.user);
-        syncUserRole(data.user);
-      }
+      localStorage.setItem('cartalocales_mock_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      syncUserRole(mockUser);
       return { error: null };
     } catch (e: unknown) {
       return { error: e instanceof Error ? e.message : 'Error inesperado al iniciar sesión' };
@@ -260,7 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('cartalocales_mock_user');
       setUser(null);
       setSession(null);
       setRole('general');
