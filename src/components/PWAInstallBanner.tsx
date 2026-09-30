@@ -97,10 +97,7 @@ export const PWAInstallBanner: React.FC<{ compact?: boolean }> = ({ compact = fa
           </div>
           <div>
             <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <span>Instalar como App Nativa</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-orange-500/30 text-orange-300 border border-orange-500/40">
-                PWA
-              </span>
+              <span>Instalar App</span>
             </h4>
             <p className="text-xs text-slate-300 mt-0.5">
               Accede a las cartas sin conexión a internet y recibe alertas push de pedidos.
@@ -174,7 +171,7 @@ export const PWAInstallBanner: React.FC<{ compact?: boolean }> = ({ compact = fa
                 </div>
                 <div>
                   <p className="font-semibold text-white">2. Añadir a pantalla de inicio</p>
-                  <p className="text-xs text-slate-400">Aparecerá el icono en tu pantalla como una app nativa.</p>
+                  <p className="text-xs text-slate-400">Aparecerá el icono en tu pantalla como una app.</p>
                 </div>
               </div>
             </div>
