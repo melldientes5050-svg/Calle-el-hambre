@@ -18,8 +18,7 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { LocationPickerModal } from './components/LocationPickerModal';
 import { LiveOrderTrackerModal } from './components/LiveOrderTrackerModal';
 import { LargeReceiptModal } from './components/LargeReceiptModal';
-import { SupabaseStatusModal } from './components/SupabaseStatusModal';
-import { fetchLocalesFromSupabase } from './services/supabaseService';
+import { LargeReceiptModal } from './components/LargeReceiptModal';
 import { Search, Utensils, Store } from 'lucide-react';
 
 function AppContent() {
@@ -34,19 +33,11 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [isDeviceFrame, setIsDeviceFrame] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string>('Todas');
 
-  // Try to load stores from Supabase on mount
-  useEffect(() => {
-    fetchLocalesFromSupabase().then(({ locales: liveLocales }) => {
-      if (liveLocales && liveLocales.length > 0) {
-        setLocales(liveLocales);
-      }
-    });
-  }, []);
+  // Locales loaded from mock on mount
 
   // Distinct cuisines list
   const cuisines = ['Todas', ...Array.from(new Set(locales.map((l) => l.cuisine)))];
@@ -115,7 +106,6 @@ function AppContent() {
             setActiveTab('notifications');
           }}
           onOpenLocationPicker={() => setIsLocationModalOpen(true)}
-          onOpenSupabaseStatus={() => setIsSupabaseModalOpen(true)}
           onOpenProfile={() => {
             setSelectedLocal(null);
             setActiveTab('profile');
@@ -295,11 +285,7 @@ function AppContent() {
           }}
         />
 
-        {/* Supabase Status & SQL Migration Helper Modal */}
-        <SupabaseStatusModal
-          isOpen={isSupabaseModalOpen}
-          onClose={() => setIsSupabaseModalOpen(false)}
-        />
+
 
         {/* Native Mobile Bottom Navigation Bar */}
         <BottomNav
