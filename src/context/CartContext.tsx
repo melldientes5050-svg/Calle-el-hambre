@@ -18,7 +18,7 @@ import {
   scheduleOrderProgressNotifications,
   sendPushNotification
 } from '../services/notificationService';
-import { insertOrderToSupabase, subscribeToOrderRealtime } from '../services/supabaseService';
+
 
 interface CreateOrderPayload {
   localId: string;
@@ -311,13 +311,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveTrackingOrder(newOrder);
     setCompletedReceiptOrder(newOrder);
 
-    // Save order in Supabase cloud database (with graceful fallback if offline or tables pending)
-    insertOrderToSupabase(newOrder).catch((err) => console.warn('Supabase insert skipped:', err));
 
-    // Subscribe to Realtime updates from Supabase
-    subscribeToOrderRealtime(orderId, (newStatus) => {
-      updateOrderStatus(orderId, newStatus);
-    });
 
     // Remove ordered items from cart
     const orderedItemIds = new Set(payload.items.map((i) => i.id));
@@ -409,3 +403,4 @@ export const useCart = () => {
   }
   return context;
 };
+
