@@ -1,12 +1,15 @@
 import React from 'react';
-import { Bell, MapPin, ChevronDown, Store, Smartphone, Monitor } from 'lucide-react';
+import { Bell, MapPin, ChevronDown, Store, Smartphone, Monitor, Database, User as UserIcon } from 'lucide-react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { PWAInstallBanner } from './PWAInstallBanner';
 
 interface HeaderProps {
   onOpenNotifications: () => void;
   onOpenLocationPicker: () => void;
+  onOpenSupabaseStatus: () => void;
+  onOpenProfile: () => void;
   isDeviceFrame: boolean;
   onToggleDeviceFrame: () => void;
   onGoHome: () => void;
@@ -15,12 +18,15 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenLocationPicker,
+  onOpenSupabaseStatus,
+  onOpenProfile,
   isDeviceFrame,
   onToggleDeviceFrame,
   onGoHome,
 }) => {
   const isOnline = useOnlineStatus();
   const { unreadCount, currentAddress } = useCart();
+  const { user, userName, role } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-3.5 py-2 pt-safe transition-all shadow-lg">
@@ -49,6 +55,34 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action icons & install */}
           <div className="flex items-center gap-1.5">
+            {/* Supabase status chip */}
+            <button
+              onClick={onOpenSupabaseStatus}
+              className="flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-950/60 border border-emerald-700/60 text-emerald-400 text-[10px] font-bold hover:bg-emerald-900/60 active:scale-95 transition"
+              title="Estado de conexión Supabase"
+            >
+              <Database className="w-3 h-3" />
+              <span className="hidden min-[380px]:inline">Supabase</span>
+            </button>
+
+            {/* User Profile / Auth Button */}
+            <button
+              onClick={onOpenProfile}
+              className={`flex items-center gap-1 px-2 py-1 rounded-xl text-[10px] font-bold border active:scale-95 transition ${
+                role === 'admin'
+                  ? 'bg-red-950/70 border-red-500/70 text-red-300'
+                  : role === 'propietario'
+                  ? 'bg-emerald-950/70 border-emerald-500/70 text-emerald-300'
+                  : user
+                  ? 'bg-orange-950/60 border-orange-500/60 text-orange-400'
+                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+              }`}
+              title={user ? `Conectado como ${userName} (${role})` : 'Iniciar Sesión'}
+            >
+              {role === 'admin' ? <span>👑</span> : role === 'propietario' ? <span>🏪</span> : <UserIcon className="w-3 h-3" />}
+              <span className="max-w-[70px] truncate">{user ? userName : 'Cuenta'}</span>
+            </button>
+
             {/* PWA Install Button */}
             <PWAInstallBanner compact />
 

@@ -5,7 +5,9 @@ import {
   Order,
   Product,
   ProductExtra,
-  PushNotificationItem
+  PushNotificationItem,
+  LocationCoordinates,
+  PagoMovilDetails,
 } from '../types';
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -16,6 +18,7 @@ import {
   scheduleOrderProgressNotifications,
   sendPushNotification
 } from '../services/notificationService';
+import { insertOrderToSupabase, subscribeToOrderRealtime } from '../services/supabaseService';
 
 interface CreateOrderPayload {
   localId: string;
@@ -30,8 +33,12 @@ interface CreateOrderPayload {
   scheduledTime?: string;
   tableNumber?: string;
   address?: string;
+  coordinates?: LocationCoordinates;
   customerName?: string;
-  paymentMethod: 'card' | 'bizum' | 'cash';
+  paymentMethod: 'efectivo' | 'pago_movil';
+  pagoMovilDetails?: PagoMovilDetails;
+  userId?: string;
+  userEmail?: string;
 }
 
 interface CartContextType {
@@ -55,6 +62,8 @@ interface CartContextType {
   orders: Order[];
   activeTrackingOrder: Order | null;
   setActiveTrackingOrder: (order: Order | null) => void;
+  completedReceiptOrder: Order | null;
+  setCompletedReceiptOrder: (order: Order | null) => void;
   createOrder: (payload: CreateOrderPayload) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   notifications: PushNotificationItem[];
@@ -65,6 +74,8 @@ interface CartContextType {
   notificationSettings: NotificationSettings;
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
   currentAddress: string;
+  currentCoordinates: LocationCoordinates | null;
+  setCurrentLocation: (address: string, coords?: LocationCoordinates) => void;
   setCurrentAddress: (address: string) => void;
 }
 
@@ -94,14 +105,36 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [activeTrackingOrder, setActiveTrackingOrder] = useState<Order | null>(null);
+  const [completedReceiptOrder, setCompletedReceiptOrder] = useState<Order | null>(null);
 
   const [currentAddress, setCurrentAddress] = useState<string>(() => {
     try {
-      return localStorage.getItem(ADDRESS_STORAGE_KEY) || 'Calle Mayor 42, Centro';
+      return localStorage.getItem(ADDRESS_STORAGE_KEY) || 'Ubicación GPS fijada';
     } catch {
-      return 'Calle Mayor 42, Centro';
+      return 'Ubicación GPS fijada';
     }
   });
+
+  const [currentCoordinates, setCurrentCoordinates] = useState<LocationCoordinates | null>(() => {
+    try {
+      const saved = localStorage.getItem('cartalocales_gps_coords');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const setCurrentLocation = (address: string, coords?: LocationCoordinates) => {
+    setCurrentAddress(address);
+    if (coords) {
+      setCurrentCoordinates(coords);
+      try {
+        localStorage.setItem('cartalocales_gps_coords', JSON.stringify(coords));
+      } catch {
+        // ignore
+      }
+    }
+  };
 
   const [notifications, setNotifications] = useState<PushNotificationItem[]>(getStoredNotifications);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(getNotificationSettings);
@@ -252,6 +285,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newOrder: Order = {
       id: orderId,
       createdAt: new Date().toISOString(),
+      userId: payload.userId,
+      userEmail: payload.userEmail,
       localId: payload.localId,
       localName: payload.localName,
       items: [...payload.items],
@@ -264,14 +299,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       scheduledTime: payload.scheduledTime,
       tableNumber: payload.tableNumber,
       address: payload.address,
+      coordinates: payload.coordinates,
       customerName: payload.customerName || 'Cliente Gourmet',
       paymentMethod: payload.paymentMethod,
+      pagoMovilDetails: payload.pagoMovilDetails,
       status: 'recibido',
       estimatedMinutes: payload.deliveryType === 'delivery' ? 30 : 15,
     };
 
     setOrders((prev) => [newOrder, ...prev]);
     setActiveTrackingOrder(newOrder);
+    setCompletedReceiptOrder(newOrder);
+
+    // Save order in Supabase cloud database (with graceful fallback if offline or tables pending)
+    insertOrderToSupabase(newOrder).catch((err) => console.warn('Supabase insert skipped:', err));
+
+    // Subscribe to Realtime updates from Supabase
+    subscribeToOrderRealtime(orderId, (newStatus) => {
+      updateOrderStatus(orderId, newStatus);
+    });
 
     // Remove ordered items from cart
     const orderedItemIds = new Set(payload.items.map((i) => i.id));
@@ -334,6 +380,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         orders,
         activeTrackingOrder,
         setActiveTrackingOrder,
+        completedReceiptOrder,
+        setCompletedReceiptOrder,
         createOrder,
         updateOrderStatus,
         notifications,
@@ -344,6 +392,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notificationSettings,
         updateNotificationSettings,
         currentAddress,
+        currentCoordinates,
+        setCurrentLocation,
         setCurrentAddress,
       }}
     >

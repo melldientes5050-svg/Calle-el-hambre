@@ -1,8 +1,9 @@
 import React from 'react';
-import { Store, Layers, ShoppingBag, Package, Bell } from 'lucide-react';
+import { Store, ShoppingBag, Package, Bell, User as UserIcon, Crown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
-export type NavTab = 'home' | 'cartas' | 'cart' | 'orders' | 'notifications';
+export type NavTab = 'home' | 'cart' | 'orders' | 'profile' | 'notifications' | 'admin' | 'owner';
 
 interface BottomNavProps {
   currentTab: NavTab;
@@ -16,6 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenCart,
 }) => {
   const { cartCount, unreadCount, orders } = useCart();
+  const { role } = useAuth();
 
   const handleTabClick = (tab: NavTab) => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -35,19 +37,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const navItems = [
     {
       id: 'home' as NavTab,
-      label: 'Locales',
-      icon: Store,
-    },
-    {
-      id: 'cartas' as NavTab,
       label: 'Cartas',
-      icon: Layers,
-    },
-    {
-      id: 'cart' as NavTab,
-      label: 'Carrito',
-      icon: ShoppingBag,
-      badge: cartCount > 0 ? cartCount : undefined,
+      icon: Store,
     },
     {
       id: 'orders' as NavTab,
@@ -57,11 +48,37 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       badgeColor: 'bg-slate-700',
     },
     {
-      id: 'notifications' as NavTab,
-      label: 'Alertas',
-      icon: Bell,
-      badge: unreadCount > 0 ? unreadCount : undefined,
-      badgeColor: 'bg-red-500',
+      id: 'cart' as NavTab,
+      label: 'Carrito',
+      icon: ShoppingBag,
+      badge: cartCount > 0 ? cartCount : undefined,
+    },
+    // Dedicated Tab for Admin or Propietario
+    ...(role === 'admin'
+      ? [
+          {
+            id: 'admin' as NavTab,
+            label: 'Admin',
+            icon: Crown,
+            badge: undefined,
+            badgeColor: 'bg-red-600',
+          },
+        ]
+      : role === 'propietario'
+      ? [
+          {
+            id: 'owner' as NavTab,
+            label: 'Mi Negocio',
+            icon: Store,
+            badge: undefined,
+            badgeColor: 'bg-emerald-600',
+          },
+        ]
+      : []),
+    {
+      id: 'profile' as NavTab,
+      label: 'Cuenta',
+      icon: UserIcon,
     },
   ];
 
@@ -84,7 +101,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 <Icon
                   className={`w-5 h-5 transition-transform duration-200 ${
                     isActive ? 'scale-110 stroke-[2.5]' : 'stroke-[1.8]'
-                  }`}
+                  } ${item.id === 'admin' && isActive ? 'text-red-400' : ''}`}
                 />
                 {item.badge !== undefined && (
                   <span
@@ -98,13 +115,21 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               </div>
               <span
                 className={`text-[10px] mt-1 font-semibold tracking-tight transition-colors ${
-                  isActive ? 'text-orange-400 font-bold' : 'text-slate-400'
+                  isActive
+                    ? item.id === 'admin'
+                      ? 'text-red-400 font-bold'
+                      : 'text-orange-400 font-bold'
+                    : 'text-slate-400'
                 }`}
               >
                 {item.label}
               </span>
               {isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 absolute -bottom-0.5" />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full absolute -bottom-0.5 ${
+                    item.id === 'admin' ? 'bg-red-500' : 'bg-orange-500'
+                  }`}
+                />
               )}
             </button>
           );

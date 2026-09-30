@@ -19,7 +19,7 @@ interface OrdersViewProps {
 }
 
 export const OrdersView: React.FC<OrdersViewProps> = ({ onExploreLocales }) => {
-  const { orders, setActiveTrackingOrder } = useCart();
+  const { orders, setActiveTrackingOrder, setCompletedReceiptOrder } = useCart();
 
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
@@ -199,12 +199,24 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ onExploreLocales }) => {
                         : '🛍️ Recogida'}
                     </span>
                     <span>•</span>
-                    <span className="capitalize">{order.paymentMethod}</span>
+                    <span className="font-semibold text-emerald-400">
+                      {order.paymentMethod === 'pago_movil' ? '📱 Pago Móvil' : '💵 Efectivo'}
+                    </span>
                   </div>
 
-                  <div className="text-sm font-black text-white flex items-center gap-2">
-                    <span>
-                      Total: <span className="text-orange-400">{order.total.toFixed(2)} €</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCompletedReceiptOrder(order);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 transition"
+                    >
+                      Ver Recibo
+                    </button>
+                    <span className="text-sm font-black text-white">
+                      <span className="text-orange-400">{order.total.toFixed(2)} €</span>
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 group-hover:text-orange-400 transition" />
                   </div>

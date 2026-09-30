@@ -1,3 +1,17 @@
+export type UserRole = 'general' | 'propietario' | 'admin';
+
+export interface AppUserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role: UserRole;
+  assignedLocalId?: string;
+  createdAt: string;
+}
+
 export interface ProductExtra {
   id: string;
   name: string;
@@ -24,8 +38,8 @@ export interface LocalTenant {
   name: string;
   tagline: string;
   cuisine: string;
-  rating: number;
-  reviewsCount: number;
+  rating?: number;
+  reviewsCount?: number;
   deliveryTime: string;
   minOrder: number;
   deliveryFee: number;
@@ -36,7 +50,6 @@ export interface LocalTenant {
   isOpen: boolean;
   openingHours: string;
   phone: string;
-  featuredDish: string;
   categories: string[];
   products: Product[];
 }
@@ -54,9 +67,25 @@ export interface CartItem {
   specialInstructions?: string;
 }
 
+export interface LocationCoordinates {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  label?: string;
+}
+
+export interface PagoMovilDetails {
+  civ: string; // C.I. o RIF
+  phone: string; // Teléfono
+  bank: string; // Banco
+  referenceCode: string; // Código de referencia
+}
+
 export interface Order {
   id: string;
   createdAt: string;
+  userId?: string;
+  userEmail?: string;
   localId: string;
   localName: string;
   items: CartItem[];
@@ -69,8 +98,10 @@ export interface Order {
   scheduledTime?: string;
   tableNumber?: string;
   address?: string;
+  coordinates?: LocationCoordinates;
   customerName?: string;
-  paymentMethod: 'card' | 'bizum' | 'cash';
+  paymentMethod: 'efectivo' | 'pago_movil';
+  pagoMovilDetails?: PagoMovilDetails;
   status: 'recibido' | 'en_cocina' | 'en_camino' | 'entregado';
   estimatedMinutes?: number;
 }

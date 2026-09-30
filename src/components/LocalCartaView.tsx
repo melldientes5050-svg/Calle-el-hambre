@@ -157,11 +157,10 @@ export const LocalCartaView: React.FC<LocalCartaViewProps> = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-600/90 text-white">
-                {local.cuisine}
+                Negocio {local.cuisine}
               </span>
-              <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                {local.rating} ({local.reviewsCount})
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900/90 text-emerald-400 border border-emerald-500/40">
+                {local.isOpen ? 'Abierto para pedidos' : 'Cerrado'}
               </span>
             </div>
             <h1 className="text-lg sm:text-xl font-black text-white leading-tight mt-1 truncate">

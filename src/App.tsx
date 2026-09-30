@@ -1,31 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { INITIAL_LOCALES } from './data/mockLocales';
 import { LocalTenant } from './types';
+import { AuthProvider } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Header } from './components/Header';
-import { FixedCartasSection } from './components/FixedCartasSection';
 import { LocalCard } from './components/LocalCard';
 import { LocalCartaView } from './components/LocalCartaView';
 import { CartDrawer } from './components/CartDrawer';
 import { OrdersView } from './components/OrdersView';
 import { NotificationsCenter } from './components/NotificationsCenter';
+import { UserProfileView } from './components/UserProfileView';
+import { AdminPanel } from './components/AdminPanel';
+import { OwnerPortal } from './components/OwnerPortal';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { LocationPickerModal } from './components/LocationPickerModal';
 import { LiveOrderTrackerModal } from './components/LiveOrderTrackerModal';
-import { Search, Utensils, Sparkles, Store } from 'lucide-react';
+import { LargeReceiptModal } from './components/LargeReceiptModal';
+import { SupabaseStatusModal } from './components/SupabaseStatusModal';
+import { fetchLocalesFromSupabase } from './services/supabaseService';
+import { Search, Utensils, Store } from 'lucide-react';
 
 function AppContent() {
-  const { activeTrackingOrder, setActiveTrackingOrder } = useCart();
-  const [locales] = useState<LocalTenant[]>(INITIAL_LOCALES);
+  const {
+    activeTrackingOrder,
+    setActiveTrackingOrder,
+    completedReceiptOrder,
+    setCompletedReceiptOrder,
+  } = useCart();
+  const [locales, setLocales] = useState<LocalTenant[]>(INITIAL_LOCALES);
   const [selectedLocal, setSelectedLocal] = useState<LocalTenant | null>(null);
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [isDeviceFrame, setIsDeviceFrame] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string>('Todas');
+
+  // Try to load stores from Supabase on mount
+  useEffect(() => {
+    fetchLocalesFromSupabase().then(({ locales: liveLocales }) => {
+      if (liveLocales && liveLocales.length > 0) {
+        setLocales(liveLocales);
+      }
+    });
+  }, []);
 
   // Distinct cuisines list
   const cuisines = ['Todas', ...Array.from(new Set(locales.map((l) => l.cuisine)))];
@@ -94,6 +115,11 @@ function AppContent() {
             setActiveTab('notifications');
           }}
           onOpenLocationPicker={() => setIsLocationModalOpen(true)}
+          onOpenSupabaseStatus={() => setIsSupabaseModalOpen(true)}
+          onOpenProfile={() => {
+            setSelectedLocal(null);
+            setActiveTab('profile');
+          }}
           isDeviceFrame={isDeviceFrame}
           onToggleDeviceFrame={() => setIsDeviceFrame((v) => !v)}
           onGoHome={handleGoHome}
@@ -102,7 +128,7 @@ function AppContent() {
         {/* Dynamic Main Body Content */}
         <main className="flex-1 w-full flex flex-col">
           {selectedLocal ? (
-            /* Individual Local Tenant Carta View */
+            /* Individual Local Tenant Carta View - Dentro están todos sus platos */
             <LocalCartaView
               local={selectedLocal}
               onBack={handleBackToLocales}
@@ -113,27 +139,25 @@ function AppContent() {
             /* Tabs Navigation */
             <>
               {activeTab === 'home' && (
-                <div className="pb-safe space-y-4">
+                <div className="pb-safe space-y-4 pt-1">
                   {/* PWA In-App Install Banner */}
                   <PWAInstallBanner />
 
-                  {/* SECCIÓN FIJA OBLIGATORIA: 1 Carta de Cada Local */}
-                  <FixedCartasSection
-                    locales={locales}
-                    selectedLocalId={null}
-                    onSelectLocal={handleSelectLocal}
-                  />
-
-                  {/* Locales Directory Section */}
+                  {/* Cartas de Locales - Sección Principal */}
                   <div className="px-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Store className="w-4 h-4 text-orange-400" />
-                        <h2 className="text-sm font-black text-white uppercase tracking-wider">
-                          Nuestras Tiendas ({filteredLocales.length})
-                        </h2>
+                        <div>
+                          <h2 className="text-sm font-black text-white uppercase tracking-wider">
+                            Cartas de Locales ({filteredLocales.length})
+                          </h2>
+                          <p className="text-[11px] text-slate-400">
+                            Pulsa sobre una carta para ver sus platos de comida
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-xs text-slate-400">Entrega rápida</span>
+                      <span className="text-xs text-orange-400 font-bold">Menú Digital</span>
                     </div>
 
                     {/* Search Bar */}
@@ -143,33 +167,51 @@ function AppContent() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar por tienda, plato o tipo de comida..."
+                        placeholder="Buscar hamburguesas, perros, pinchos, batidos, cachapas..."
                         className="w-full rounded-2xl bg-slate-900 border border-slate-800 pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 transition shadow-inner"
                       />
                     </div>
 
-                    {/* Cuisine Filter Pills */}
+                    {/* Cuisine Filter Pills with Emojis */}
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                      {cuisines.map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => setSelectedCuisine(c)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 ${
-                            selectedCuisine === c
-                              ? 'bg-orange-600 text-white shadow-md'
-                              : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      ))}
+                      {cuisines.map((c) => {
+                        const emoji =
+                          c === 'Hamburguesas'
+                            ? '🍔'
+                            : c === 'Perro caliente'
+                            ? '🌭'
+                            : c === 'Pinchos'
+                            ? '🍢'
+                            : c === 'Batidos'
+                            ? '🥤'
+                            : c === 'Cachapas'
+                            ? '🌽'
+                            : c === 'Arroz chino'
+                            ? '🥡'
+                            : '🍽️';
+
+                        return (
+                          <button
+                            key={c}
+                            onClick={() => setSelectedCuisine(c)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 ${
+                              selectedCuisine === c
+                                ? 'bg-orange-600 text-white shadow-md shadow-orange-950/40'
+                                : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
+                            }`}
+                          >
+                            <span>{emoji}</span>
+                            <span>{c}</span>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    {/* Locales List */}
+                    {/* Cartas List - Aparecen Solas sin plato estrella adjunto ni estrellas artificiales */}
                     {filteredLocales.length === 0 ? (
                       <div className="py-12 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800/60 p-4">
                         <Utensils className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-                        <p className="text-xs font-semibold">No se encontraron tiendas con ese criterio.</p>
+                        <p className="text-xs font-semibold">No se encontraron cartas de locales.</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -186,66 +228,33 @@ function AppContent() {
                 </div>
               )}
 
-              {activeTab === 'cartas' && (
-                <div className="pb-safe space-y-4">
-                  {/* Dedicated focus on the 1 carta per local feature */}
-                  <div className="p-4 bg-slate-900/40 border-b border-slate-800/80">
-                    <h2 className="text-base font-black text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-orange-400" />
-                      <span>Catálogo de Cartas Digitales</span>
-                    </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Compara las cartas fijas de cada una de nuestras tiendas asociadas y entra a la que prefieras.
-                    </p>
-                  </div>
-
-                  <FixedCartasSection
-                    locales={locales}
-                    selectedLocalId={null}
-                    onSelectLocal={handleSelectLocal}
-                  />
-
-                  {/* List of full carta cards */}
-                  <div className="px-4 space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Explorador de Cartas por Tienda
-                    </h3>
-                    <div className="space-y-3">
-                      {locales.map((local) => (
-                        <div
-                          key={local.id}
-                          onClick={() => handleSelectLocal(local)}
-                          className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-orange-500/60 cursor-pointer transition shadow-lg active:scale-[0.99] flex items-center justify-between gap-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={local.logoImage}
-                              alt={local.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-slate-700"
-                            />
-                            <div>
-                              <h4 className="text-sm font-bold text-white">{local.name}</h4>
-                              <p className="text-xs text-orange-400 font-medium">
-                                Carta con {local.products.length} platos
-                              </p>
-                              <p className="text-[11px] text-slate-400">
-                                Plato estrella: {local.featuredDish}
-                              </p>
-                            </div>
-                          </div>
-
-                          <button className="px-3 py-1.5 rounded-xl bg-orange-600/90 text-white text-xs font-bold shadow transition shrink-0">
-                            Abrir Carta
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {activeTab === 'orders' && (
                 <OrdersView onExploreLocales={() => setActiveTab('home')} />
+              )}
+
+              {activeTab === 'profile' && (
+                <UserProfileView
+                  onOpenOrderTracking={(order) => setActiveTrackingOrder(order)}
+                  onExploreCartas={() => setActiveTab('home')}
+                  onOpenAdminPanel={() => setActiveTab('admin')}
+                  onOpenOwnerPortal={() => setActiveTab('owner')}
+                />
+              )}
+
+              {activeTab === 'admin' && (
+                <AdminPanel
+                  locales={locales}
+                  onUpdateLocales={(updated) => setLocales(updated)}
+                  onOpenReceipt={(order) => setCompletedReceiptOrder(order)}
+                />
+              )}
+
+              {activeTab === 'owner' && (
+                <OwnerPortal
+                  locales={locales}
+                  onUpdateLocales={(updated) => setLocales(updated)}
+                  onOpenReceipt={(order) => setCompletedReceiptOrder(order)}
+                />
               )}
 
               {activeTab === 'notifications' && <NotificationsCenter />}
@@ -259,7 +268,7 @@ function AppContent() {
           onClose={() => setIsCartOpen(false)}
           onOrderCompleted={() => {
             setSelectedLocal(null);
-            setActiveTab('orders');
+            setActiveTab('profile');
           }}
           onNavigateToStore={handleNavigateToStoreFromCart}
         />
@@ -274,6 +283,22 @@ function AppContent() {
         <LiveOrderTrackerModal
           order={activeTrackingOrder}
           onClose={() => setActiveTrackingOrder(null)}
+        />
+
+        {/* Large Receipt Modal upon order or payment reception */}
+        <LargeReceiptModal
+          order={completedReceiptOrder}
+          onClose={() => setCompletedReceiptOrder(null)}
+          onOpenTracking={(order) => {
+            setCompletedReceiptOrder(null);
+            setActiveTrackingOrder(order);
+          }}
+        />
+
+        {/* Supabase Status & SQL Migration Helper Modal */}
+        <SupabaseStatusModal
+          isOpen={isSupabaseModalOpen}
+          onClose={() => setIsSupabaseModalOpen(false)}
         />
 
         {/* Native Mobile Bottom Navigation Bar */}
@@ -293,8 +318,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <AppContent />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
+    </AuthProvider>
   );
 }

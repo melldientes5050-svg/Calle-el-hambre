@@ -87,8 +87,20 @@ export const FixedCartasSection: React.FC<FixedCartasSectionProps> = ({
                     alt={local.name}
                     className="w-8 h-8 rounded-full border-2 border-slate-900 object-cover shadow-md"
                   />
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-white border border-white/10">
-                    {local.cuisine}
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/85 backdrop-blur-md text-orange-400 border border-orange-500/40">
+                    {local.cuisine === 'Hamburguesas'
+                      ? '🍔 Hamburguesas'
+                      : local.cuisine === 'Perro caliente'
+                      ? '🌭 Perro Caliente'
+                      : local.cuisine === 'Pinchos'
+                      ? '🍢 Pinchos'
+                      : local.cuisine === 'Batidos'
+                      ? '🥤 Batidos'
+                      : local.cuisine === 'Cachapas'
+                      ? '🌽 Cachapas'
+                      : local.cuisine === 'Arroz chino'
+                      ? '🥡 Arroz Chino'
+                      : local.cuisine}
                   </span>
                 </div>
 
